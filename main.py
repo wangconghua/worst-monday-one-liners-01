@@ -162,6 +162,32 @@ def check_one_breath(text):
     return None
 
 
+def check_time_arc(text):
+    """The joke's shape: a fast fix paid for with a slow, long cost.
+
+    The line only works as a Monday punchline if the quick repair
+    ("fixed ... by 9 a.m.") lands before the long payback ("eight
+    hours ..."). If the cost came first, the setup would read as a
+    complaint and the twist would have nothing to undercut.
+    """
+    lowered = text.lower()
+    fix_at = lowered.find("fixed")
+    cost_at = lowered.find("eight hours")
+    if fix_at < 0:
+        return "entry never says what the agent fixed"
+    if cost_at < 0:
+        return "entry never says what the fix cost"
+    if fix_at > cost_at:
+        return "the fix must come before its cost in the line"
+    return None
+
+
+def gather_failures(text, checks):
+    """Run every check and return the list of failure messages."""
+    failures = [check(text) for check in checks]
+    return [f for f in failures if f is not None]
+
+
 def validate(text):
     """Run every check; raise one ValueError listing all failures."""
     checks = (
@@ -174,9 +200,9 @@ def validate(text):
         check_no_cliches,
         check_no_padding,
         check_one_breath,
+        check_time_arc,
     )
-    failures = [c(text) for c in checks]
-    failures = [f for f in failures if f is not None]
+    failures = gather_failures(text, checks)
     if failures:
         raise ValueError("entry failed validation: " + "; ".join(failures))
     return True
